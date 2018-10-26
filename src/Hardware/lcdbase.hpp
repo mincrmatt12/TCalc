@@ -4,11 +4,14 @@
 #include "delay.hpp"
 #include "gpiopin.hpp"
 
+//Unfortunately we can't use std::runtime_error because stdexcept takes up 20kB of space!
+#include <exception>
+
 #define LCD_ENABLE_DELAY 10 //Cycles
 
 namespace lcd {
 	
-	class LCDException {
+	class LCDException : public std::exception {
 	public:
 		LCDException(const char *msg) : msg(msg) {}
 		
