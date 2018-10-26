@@ -13,10 +13,10 @@ namespace lcd {
 		LCD1602(GPIOPin RS, GPIOPin RW, GPIOPin E, GPIOPin D4, GPIOPin D5, GPIOPin D6, GPIOPin D7, uint32_t timeout = 1000000) :
 			LCDBase(RS, RW, E, D4, D5, D6, D7, timeout) {}
 		
-		virtual bool init() override;
-		virtual bool setCursor(uint8_t, uint8_t) override;
-		virtual bool clear() override;
-		virtual bool home() override;
+		virtual void init() override;
+		virtual void setCursor(uint8_t, uint8_t) override;
+		virtual void clear() override;
+		virtual void home() override;
 		
 		enum Command : uint8_t {
 			CLEAR = 0x01,					//0000 0001

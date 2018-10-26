@@ -187,7 +187,7 @@ namespace lcd {
 		}
 	}
 	void LCDBase::readData(uint8_t &out) {
-		waitForBusyFlag;
+		waitForBusyFlag();
 		RS = true;
 		RW = true;
 		
@@ -216,7 +216,6 @@ namespace lcd {
 		}
 	}
 	
-	#undef LCD_WAITBUSY
 	#undef LCD_EDELAY
 	#undef INIT_I
 	#undef INIT_O

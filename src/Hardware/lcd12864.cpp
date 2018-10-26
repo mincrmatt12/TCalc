@@ -2,18 +2,14 @@
 
 namespace lcd {
 	
-	#define W_CMD(x) \
-		if(!writeCommand(x)) \
-			return false
-	
-	bool LCD12864::clear() {
-		return writeCommand(Command::CLEAR);
+	void LCD12864::clear() {
+		writeCommand(Command::CLEAR);
 	}
-	bool LCD12864::home() {
-		return writeCommand(Command::HOME);
+	void LCD12864::home() {
+		writeCommand(Command::HOME);
 	}
 			
-	bool LCD12864::init() {
+	void LCD12864::init() {
 		if(!FOUR_WIRE_INTERFACE) {
 			delay::ms(15);
 			writeCommandNoWait(Command::NORMAL_CMD_8BIT);
@@ -29,17 +25,15 @@ namespace lcd {
 			delay::ms(5);
 		}
 		
-		W_CMD(Command::ENTRY_CURSOR_SHIFT_RIGHT);
-		W_CMD(Command::CLEAR);
-		W_CMD(Command::DISPLAY_ON_CURSOR_OFF);
-		return true;
+		writeCommand(Command::ENTRY_CURSOR_SHIFT_RIGHT);
+		writeCommand(Command::CLEAR);
+		writeCommand(Command::DISPLAY_ON_CURSOR_OFF);
 	}
 	
-	bool LCD12864::setCursor(uint8_t row, uint8_t col) {
+	void LCD12864::setCursor(uint8_t row, uint8_t col) {
 		//If using extended command set, first set to use basic, write the address and change back
 		if(isUsingExtended()) {
-			if(!useBasic()) 
-				return false;
+			useBasic();
 			switch(row){
 			case 0: col += 0x80; break;
 			case 1: col += 0x90; break;
@@ -50,8 +44,8 @@ namespace lcd {
 			//Make the first bit 1 and second bit 0 to match the command requirements
 			col |= 0x80; //1000 0000
 			col &= 0xBF; //1011 1111
-			W_CMD(col);
-			return useExtended();
+			writeCommand(col);
+			useExtended();
 		}
 		else {
 			switch(row){
@@ -64,35 +58,30 @@ namespace lcd {
 			//Make the first bit 1 and second bit 0 to match the command requirements
 			col |= 0x80; //1000 0000
 			col &= 0xBF; //1011 1111
-			W_CMD(col);
-			return true;
+			writeCommand(col);
 		}
 	}
 	
 	bool LCD12864::isUsingExtended() {
 		return extendedCmd;
 	}
-	bool LCD12864::useExtended() {
+	void LCD12864::useExtended() {
 		if(extendedCmd) 
-			return true;
-		W_CMD(FOUR_WIRE_INTERFACE ? Command::EXT_CMD_4BIT : Command::EXT_CMD_8BIT);
+			return;
+		writeCommand(FOUR_WIRE_INTERFACE ? Command::EXT_CMD_4BIT : Command::EXT_CMD_8BIT);
 		extendedCmd = true;
-		return true;
 	}
-	bool LCD12864::useBasic() {
+	void LCD12864::useBasic() {
 		if(!extendedCmd)
-			return true;
-		W_CMD(FOUR_WIRE_INTERFACE ? Command::NORMAL_CMD_4BIT : Command::NORMAL_CMD_8BIT);
+			return;
+		writeCommand(FOUR_WIRE_INTERFACE ? Command::NORMAL_CMD_4BIT : Command::NORMAL_CMD_8BIT);
 		extendedCmd = false;
-		return true;
 	}
 	
 	bool LCD12864::isDrawing() {
 		return drawing;
 	}
-	bool LCD12864::startDraw() {
+	void LCD12864::startDraw() {
 		
 	}
-	
-	#undef W_CMD
 }
