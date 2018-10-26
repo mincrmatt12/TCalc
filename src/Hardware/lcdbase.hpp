@@ -11,11 +11,7 @@ namespace lcd {
 	
 	class LCDException : public std::runtime_error {
 	public:
-		LCDException(const char *msg) : msg(msg) {}
-			
-		virtual const char* what() const throw() override {
-			return msg;
-		}
+		LCDException(const char *msg) : runtime_error(msg) {}
 			
 	private:
 		const char *msg;
@@ -33,32 +29,32 @@ namespace lcd {
 			initGPIO();
 		}
 	
-		virtual bool init() = 0;
-		virtual bool setCursor(uint8_t, uint8_t) = 0;
-		virtual bool clear() = 0;
-		virtual bool home() = 0;
+		virtual void init() = 0;
+		virtual void setCursor(uint8_t, uint8_t) = 0;
+		virtual void clear() = 0;
+		virtual void home() = 0;
 		
-		virtual uint32_t getTimeout();
-		virtual void setTimeout(uint32_t);
+		virtual uint32_t getTimeout() const noexcept;
+		virtual void setTimeout(uint32_t) noexcept;
 	
-		virtual bool writeCommand(uint8_t cmd);
-		virtual bool writeData(uint8_t data);
-		virtual bool readData(uint8_t &out);
-		virtual bool writeString(const char *str);
+		virtual void writeCommand(uint8_t cmd);
+		virtual void writeData(uint8_t data);
+		virtual void readData(uint8_t &out);
+		virtual void writeString(const char *str);
 	
 	protected:
 		GPIOPin RS, RW, E;
 		GPIOPin D0, D1, D2, D3, D4, D5, D6, D7;
 		uint32_t timeout;
 	
-		virtual bool waitForBusyFlag();
+		virtual void waitForBusyFlag();
 		
-		virtual void writeCommandNoWait(uint8_t);
+		virtual void writeCommandNoWait(uint8_t) noexcept;
 	
-		virtual void setDataPort(uint8_t);
-		virtual uint8_t readDataPort();
+		virtual void setDataPort(uint8_t) noexcept;
+		virtual uint8_t readDataPort() noexcept;
 	
-		virtual void setGPIOMode(const GPIOConfig&);
+		virtual void setGPIOMode(const GPIOConfig&) noexcept;
 		
 		const bool FOUR_WIRE_INTERFACE;
 	
@@ -67,7 +63,7 @@ namespace lcd {
 		
 	
 	private:
-		void initGPIO();
+		void initGPIO() noexcept;
 	};
 }
 

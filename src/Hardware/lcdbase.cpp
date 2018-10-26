@@ -5,14 +5,11 @@ namespace lcd {
 	const GPIOConfig LCDBase::READ_CONFIG = { GPIO_Mode_IPU, GPIO_Speed_2MHz };
 	const GPIOConfig LCDBase::WRITE_CONFIG = { GPIO_Mode_Out_PP, GPIO_Speed_2MHz };
 	
-	#define LCD_WAITBUSY \
-		if(!waitForBusyFlag()) \
-			return false
 	#define LCD_EDELAY delay::cycles(LCD_ENABLE_DELAY)
 	#define INIT_I(x) x.init(GPIO_Mode_IPU, GPIO_Speed_2MHz)
 	#define INIT_O(x) x.init(GPIO_Mode_Out_PP, GPIO_Speed_2MHz)
 	
-	void LCDBase::initGPIO() {
+	void LCDBase::initGPIO() noexcept {
 		//Initialize the pins for output first
 		INIT_O(RS);
 		INIT_O(RW);
@@ -26,7 +23,7 @@ namespace lcd {
 		RW = false;
 		E = false;
 	}
-	void LCDBase::setGPIOMode(const GPIOConfig &config) {
+	void LCDBase::setGPIOMode(const GPIOConfig &config) noexcept {
 		if(!FOUR_WIRE_INTERFACE) {
 			D0.init(config);
 			D1.init(config);
@@ -39,16 +36,16 @@ namespace lcd {
 		D7.init(config);
 	}
 	
-	uint32_t LCDBase::getTimeout() {
+	uint32_t LCDBase::getTimeout() const noexcept {
 		return this->timeout;
 	}
-	void LCDBase::setTimeout(uint32_t t) {
+	void LCDBase::setTimeout(uint32_t t) noexcept {
 		timeout = t;
 	}
 	
 	//These functions set and read from the data port
 	//If in four wire interface, only the lowest 4 bits will be written
-	void LCDBase::setDataPort(uint8_t data) {
+	void LCDBase::setDataPort(uint8_t data) noexcept {
 		if(!FOUR_WIRE_INTERFACE) {
 			D0 = data & 0x01;
 			D1 = data & 0x02;
@@ -68,7 +65,7 @@ namespace lcd {
 		}
 	}
 	//If in four wire interface, only a nibble will be read
-	uint8_t LCDBase::readDataPort() {
+	uint8_t LCDBase::readDataPort() noexcept {
 		setGPIOMode(READ_CONFIG);
 		uint8_t result = FOUR_WIRE_INTERFACE ? (D7 << 3 | D6 << 2 | D5 << 1 | D4 << 0) : 
 				(D0 << 0 | D1 << 1 | D2 << 2 | D3 << 3 | D4 << 4 | D5 << 5 | D6 << 6 | D7 << 7);
@@ -81,7 +78,7 @@ namespace lcd {
 	 * RW selects whether the operation is a read or write operation. High - Read, Low - Write
 	 * E enables the LCD by generating a pulse
 	 */
-	bool LCDBase::waitForBusyFlag() {
+	void LCDBase::waitForBusyFlag() {
 		D7 = true;
 		RS = false;
 		RW = true;
@@ -99,7 +96,8 @@ namespace lcd {
 				//Make sure to reset enable pin after
 				E = false;
 				INIT_O(D7);
-				return false;
+				
+				throw LCDException("Waiting for busy flag timed out");
 			}
 			
 			E = false;
@@ -116,12 +114,11 @@ namespace lcd {
 		}
 		E = false;
 		INIT_O(D7);
-		return true;
 	}
 	
 		
-	bool LCDBase::writeCommand(uint8_t cmd) {
-		LCD_WAITBUSY;
+	void LCDBase::writeCommand(uint8_t cmd) {
+		waitForBusyFlag();
 		RS = false;
 		RW = false;
 		
@@ -142,10 +139,9 @@ namespace lcd {
 			LCD_EDELAY;
 			E = false;
 		}
-		return true;
 	}
 	//The busy flag cannnot be checked before initialization, thus delays are used instead of busy flag checking
-	void LCDBase::writeCommandNoWait(uint8_t cmd) {
+	void LCDBase::writeCommandNoWait(uint8_t cmd) noexcept {
 		RS = false;
 		RW = false;
 		
@@ -167,8 +163,8 @@ namespace lcd {
 			E = false;
 		}
 	}
-	bool LCDBase::writeData(uint8_t data) {
-		LCD_WAITBUSY;
+	void LCDBase::writeData(uint8_t data) {
+		waitForBusyFlag();
 		RS = true;
 		RW = false;
 		
@@ -189,10 +185,9 @@ namespace lcd {
 			LCD_EDELAY;
 			E = false;
 		}
-		return true;
 	}
-	bool LCDBase::readData(uint8_t &out) {
-		LCD_WAITBUSY;
+	void LCDBase::readData(uint8_t &out) {
+		waitForBusyFlag;
 		RS = true;
 		RW = true;
 		
@@ -214,15 +209,11 @@ namespace lcd {
 			E = false;
 		}
 		
-		return true;
 	}
-	bool LCDBase::writeString(const char *str) {
+	void LCDBase::writeString(const char *str) {
 		for(uint16_t i = 0; str[i] != '\0'; i ++) {
-			if(!writeData(str[i])) {
-				return false;
-			}
+            writeData(str[i]);
 		}
-		return true;
 	}
 	
 	#undef LCD_WAITBUSY
