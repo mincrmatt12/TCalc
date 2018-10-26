@@ -3,10 +3,23 @@
 #include "stm32f10x.h"
 #include "delay.hpp"
 #include "gpiopin.hpp"
+#include <stdexcept>
 
 #define LCD_ENABLE_DELAY 10 //Cycles
 
 namespace lcd {
+	
+	class LCDException : public std::runtime_error {
+	public:
+		LCDException(const char *msg) : msg(msg) {}
+			
+		virtual const char* what() const throw() override {
+			return msg;
+		}
+			
+	private:
+		const char *msg;
+	};
 	
 	class LCDBase {
 	public:
